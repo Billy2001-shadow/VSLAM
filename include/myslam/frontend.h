@@ -1,4 +1,6 @@
 #pragma once
+#include "myslam/loopclosing.h"
+#include <memory>
 #ifndef MYSLAM_FRONTEND_H
 #define MYSLAM_FRONTEND_H
 
@@ -20,123 +22,127 @@ enum class FrontendStatus { INITING, TRACKING_GOOD, TRACKING_BAD, LOST };
  * 估计当前帧Pose，在满足关键帧条件时向地图加入关键帧并触发优化
  */
 class Frontend {
-   public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-    typedef std::shared_ptr<Frontend> Ptr;
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  typedef std::shared_ptr<Frontend> Ptr;
 
-    Frontend();
+  Frontend();
 
-    /// 外部接口，添加一个帧并计算其定位结果
-    bool AddFrame(Frame::Ptr frame);
+  /// 外部接口，添加一个帧并计算其定位结果
+  bool AddFrame(Frame::Ptr frame);
 
-    /// Set函数
-    void SetMap(Map::Ptr map) { map_ = map; }
+  /// Set函数
+  void SetMap(Map::Ptr map) { map_ = map; }
 
-    void SetBackend(std::shared_ptr<Backend> backend) { backend_ = backend; }
+  void SetBackend(std::shared_ptr<Backend> backend) { backend_ = backend; }
 
-    void SetViewer(std::shared_ptr<Viewer> viewer) { viewer_ = viewer; }
+  void SetViewer(std::shared_ptr<Viewer> viewer) { viewer_ = viewer; }
 
-    FrontendStatus GetStatus() const { return status_; }
+  void SetLoopClosing(std::shared_ptr<LoopClosing> loopclosing) {
+    loopclosing_ = loopclosing;
+  }
 
-    void SetCameras(Camera::Ptr left, Camera::Ptr right) {
-        camera_left_ = left;
-        camera_right_ = right;
-    }
+  FrontendStatus GetStatus() const { return status_; }
 
-   private:
-    /**
-     * Track in normal mode
-     * @return true if success
-     */
-    bool Track();
+  void SetCameras(Camera::Ptr left, Camera::Ptr right) {
+    camera_left_ = left;
+    camera_right_ = right;
+  }
 
-    /**
-     * Reset when lost
-     * @return true if success
-     */
-    bool Reset();
+private:
+  /**
+   * Track in normal mode
+   * @return true if success
+   */
+  bool Track();
 
-    /**
-     * Track with last frame
-     * @return num of tracked points
-     */
-    int TrackLastFrame();
+  /**
+   * Reset when lost
+   * @return true if success
+   */
+  bool Reset();
 
-    /**
-     * estimate current frame's pose
-     * @return num of inliers
-     */
-    int EstimateCurrentPose();
+  /**
+   * Track with last frame
+   * @return num of tracked points
+   */
+  int TrackLastFrame();
 
-    /**
-     * set current frame as a keyframe and insert it into backend
-     * @return true if success
-     */
-    bool InsertKeyframe();
+  /**
+   * estimate current frame's pose
+   * @return num of inliers
+   */
+  int EstimateCurrentPose();
 
-    /**
-     * Try init the frontend with stereo images saved in current_frame_
-     * @return true if success
-     */
-    bool StereoInit();
+  /**
+   * set current frame as a keyframe and insert it into backend
+   * @return true if success
+   */
+  bool InsertKeyframe();
 
-    /**
-     * Detect features in left image in current_frame_
-     * keypoints will be saved in current_frame_
-     * @return
-     */
-    int DetectFeatures();
+  /**
+   * Try init the frontend with stereo images saved in current_frame_
+   * @return true if success
+   */
+  bool StereoInit();
 
-    /**
-     * Find the corresponding features in right image of current_frame_
-     * @return num of features found
-     */
-    int FindFeaturesInRight();
+  /**
+   * Detect features in left image in current_frame_
+   * keypoints will be saved in current_frame_
+   * @return
+   */
+  int DetectFeatures();
 
-    /**
-     * Build the initial map with single image
-     * @return true if succeed
-     */
-    bool BuildInitMap();
+  /**
+   * Find the corresponding features in right image of current_frame_
+   * @return num of features found
+   */
+  int FindFeaturesInRight();
 
-    /**
-     * Triangulate the 2D points in current frame
-     * @return num of triangulated points
-     */
-    int TriangulateNewPoints();
+  /**
+   * Build the initial map with single image
+   * @return true if succeed
+   */
+  bool BuildInitMap();
 
-    /**
-     * Set the features in keyframe as new observation of the map points
-     */
-    void SetObservationsForKeyFrame();
+  /**
+   * Triangulate the 2D points in current frame
+   * @return num of triangulated points
+   */
+  int TriangulateNewPoints();
 
-    // data
-    FrontendStatus status_ = FrontendStatus::INITING;
+  /**
+   * Set the features in keyframe as new observation of the map points
+   */
+  void SetObservationsForKeyFrame();
 
-    Frame::Ptr current_frame_ = nullptr;  // 当前帧
-    Frame::Ptr last_frame_ = nullptr;     // 上一帧
-    Camera::Ptr camera_left_ = nullptr;   // 左侧相机
-    Camera::Ptr camera_right_ = nullptr;  // 右侧相机
+  // data
+  FrontendStatus status_ = FrontendStatus::INITING;
 
-    Map::Ptr map_ = nullptr;
-    std::shared_ptr<Backend> backend_ = nullptr;
-    std::shared_ptr<Viewer> viewer_ = nullptr;
+  Frame::Ptr current_frame_ = nullptr; // 当前帧
+  Frame::Ptr last_frame_ = nullptr;    // 上一帧
+  Camera::Ptr camera_left_ = nullptr;  // 左侧相机
+  Camera::Ptr camera_right_ = nullptr; // 右侧相机
 
-    SE3 relative_motion_;  // 当前帧与上一帧的相对运动，用于估计当前帧pose初值
+  Map::Ptr map_ = nullptr;
+  std::shared_ptr<Backend> backend_ = nullptr;
+  std::shared_ptr<Viewer> viewer_ = nullptr;
+  std::shared_ptr<LoopClosing> loopclosing_ = nullptr;
+  SE3 relative_motion_; // 当前帧与上一帧的相对运动，用于估计当前帧pose初值
 
-    int tracking_inliers_ = 0;  // inliers, used for testing new keyframes
+  int tracking_inliers_ = 0; // inliers, used for testing new keyframes
 
-    // params
-    int num_features_ = 200;
-    int num_features_init_ = 100;
-    int num_features_tracking_ = 50;
-    int num_features_tracking_bad_ = 20;
-    int num_features_needed_for_keyframe_ = 80;
+  // params
+  int num_features_ = 200;
+  int num_features_init_ = 100;
+  int num_features_tracking_ = 50;
+  int num_features_tracking_bad_ = 20;
+  int num_features_needed_for_keyframe_ = 80;
 
-    // utilities
-    cv::Ptr<cv::GFTTDetector> gftt_;  // feature detector in opencv
+  // utilities
+  cv::Ptr<cv::GFTTDetector> gftt_; // feature detector in opencv
 };
 
-}  // namespace myslam
+} // namespace myslam
 
-#endif  // MYSLAM_FRONTEND_H
+#endif // MYSLAM_FRONTEND_H

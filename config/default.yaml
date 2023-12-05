@@ -14,3 +14,46 @@ camera.cy: 249.7
 num_features: 150
 num_features_init: 50
 num_features_tracking: 50
+
+# valid feature numbers to decide the tracking / init status
+numFeatures.initGood: 100
+numFeatures.trackingGood: 50
+numFeatures.trackingBad: 10
+# ORB Extractor: Number of features when initalizing
+ORBextractor.nInitFeatures: 300
+# ORB Extractor: Number of new features to detect when needs to create a new KF
+ORBextractor.nNewFeatures: 100
+# ORB Extractor: Scale factor between levels in the scale pyramid
+ORBextractor.scaleFactor: 1.2
+# ORB Extractor: Number of levels in the scale pyramid
+ORBextractor.nLevels: 8
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+Min.Init.Landmark.Num: 200
+
+View.ORB.Extractor.Result: 0
+View.LK.Folw: 0
+Viewer.ViewpointX: 0
+Viewer.ViewpointY: 1000 # The distance of the Y axis from the origin
+Viewer.ViewpointZ: 0
+Viewer.Camera.Focus: 5000 # The larger the focal length, the less content can be displayed on the screen, and the displayed content will appear larger
+View.Axis.Direction: 6 # AxisX: 2; AxisY: 4; AxisZ: 6
+
+# DBOW2.VOC.Path: "/home/weihao/codespace/simple-stero-vo/Vocabulary/ORBvoc.txt"
+# DBOW2.VOC.Path: "/home/cw/Slam/ssvio/vocabulary/ORBvoc.txt"
+DBOW2.VOC.Path: "/home/cw/Slam/ORB_SLAM2/Vocabulary/ORBvoc.txt"
+
+Backend.Open: 1
+# Trajectory.Save.Path: "/home/cw/Slam/ssvio/result/nothing.txt"
+
+Loop.Closing.Open: 1
+Loop.Show.Closing.Result: 1
+Loop.Threshold.Heigher: 0.027
+Loop.Threshold.Lower: 0.02
+Loop.Closig.Keyframe.Database.Min.Size: 50
+Pyramid.Level: 8

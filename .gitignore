@@ -1,4 +1,6 @@
 /build/
+/thirdparty/DBoW2/build/
+/thirdparty/DBoW2/lib/
 # Prerequisites
 *.d
 
