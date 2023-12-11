@@ -39,6 +39,7 @@ bool VisualOdometry::Init() {
 
   loopclosing_->SetBackend(backend_);
   loopclosing_->SetMap(map_);
+  loopclosing_->SetSteroCamera(dataset_->GetCamera(0), dataset_->GetCamera(1));
 
   return true;
 }

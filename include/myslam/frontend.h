@@ -1,6 +1,5 @@
 #pragma once
-#include "myslam/loopclosing.h"
-#include <memory>
+
 #ifndef MYSLAM_FRONTEND_H
 #define MYSLAM_FRONTEND_H
 
@@ -8,13 +7,17 @@
 
 #include "myslam/common_include.h"
 #include "myslam/frame.h"
-#include "myslam/map.h"
 
+#include "myslam/keyframe.h"
+#include "myslam/loopclosing.h"
+#include "myslam/map.h"
+#include "myslam/orbextractor.h"
+#include <memory>
 namespace myslam {
 
 class Backend;
 class Viewer;
-
+// class LoopClosing;
 enum class FrontendStatus { INITING, TRACKING_GOOD, TRACKING_BAD, LOST };
 
 /**
@@ -47,6 +50,12 @@ public:
   void SetCameras(Camera::Ptr left, Camera::Ptr right) {
     camera_left_ = left;
     camera_right_ = right;
+  }
+
+  std::mutex getset_reference_kp_numtex_;
+  std::shared_ptr<KeyFrame> getReferenceKF() {
+    std::unique_lock<std::mutex> lck(getset_reference_kp_numtex_);
+    return reference_kf_;
   }
 
 private:
@@ -116,13 +125,17 @@ private:
    */
   void SetObservationsForKeyFrame();
 
+  // 生成ORB特征提取器
+  void GenerateORBextractor();
+
   // data
   FrontendStatus status_ = FrontendStatus::INITING;
 
-  Frame::Ptr current_frame_ = nullptr; // 当前帧
-  Frame::Ptr last_frame_ = nullptr;    // 上一帧
-  Camera::Ptr camera_left_ = nullptr;  // 左侧相机
-  Camera::Ptr camera_right_ = nullptr; // 右侧相机
+  KeyFrame::Ptr reference_kf_ = nullptr; //上一帧关键帧
+  Frame::Ptr current_frame_ = nullptr;   // 当前帧
+  Frame::Ptr last_frame_ = nullptr;      // 上一帧
+  Camera::Ptr camera_left_ = nullptr;    // 左侧相机
+  Camera::Ptr camera_right_ = nullptr;   // 右侧相机
 
   Map::Ptr map_ = nullptr;
   std::shared_ptr<Backend> backend_ = nullptr;
@@ -140,7 +153,12 @@ private:
   int num_features_needed_for_keyframe_ = 80;
 
   // utilities
-  cv::Ptr<cv::GFTTDetector> gftt_; // feature detector in opencv
+  // cv::Ptr<cv::GFTTDetector> gftt_; // feature detector in opencv
+
+  // orb detect
+  std::shared_ptr<ORBextractor> orb_extractor_ = nullptr,
+                                orb_init_extractor_ = nullptr;
+  bool show_orb_detect_result_ = false;
 };
 
 } // namespace myslam

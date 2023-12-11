@@ -21,7 +21,7 @@ struct KeyFrame : public Frame {
   KeyFrame() {}
   KeyFrame(std::shared_ptr<Frame> frame);
 
-  KeyFrame::Ptr CreateKeyFrame(std::shared_ptr<Frame> frame);
+  static KeyFrame::Ptr CreateKeyFrame(std::shared_ptr<Frame> frame);
 
   SE3 getPose();
   void SetPose(const SE3 &pose);
@@ -31,8 +31,8 @@ struct KeyFrame : public Frame {
   unsigned long key_frame_id_; //关键帧的id
 
   // for pose graph optimization
-  SE3 relativate_pose_to_last_KF_;      //相对于上一关键帧的位姿
-  SE3 relativate_pose_to_last_loop_KF_; //相对于最近一次闭环的位姿
+  SE3 relative_pose_to_last_KF_; //相对于上一关键帧的位姿
+  SE3 relative_pose_to_loop_KF_; //相对于最近一次闭环的位姿
 
   std::weak_ptr<KeyFrame> loop_key_frame_; //最近一次闭环的关键帧
   std::weak_ptr<KeyFrame> last_key_frame_; //上一关键帧
